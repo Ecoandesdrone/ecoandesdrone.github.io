@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal del agricultor — Su Finca | EcoAndes Drone</title>
+  <meta name="description" content="Portal web de Su Finca: consulta y gestiona tus lotes, sincronizados con la app Android.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="marca" href="index.html"><span class="logo">🌱</span> Su Finca</a>
+  <nav>
+    <span class="nav-secciones" id="navSecciones" style="display:none">
+      <a href="#panelLotes">🗺️ Mis lotes</a>
+      <a href="#panelSensores">🌡️ Sensores</a>
+      <a href="#panelCalculadora">🧮 Calculadora</a>
+      <a href="#panelProductos">🧪 Productos ICA</a>
+    </span>
+    <a href="index.html">Inicio</a>
+    <a href="#" id="enlaceSalir" style="display:none">Cerrar sesión</a>
+  </nav>
+</header>
+
+<main class="contenedor">
+
+  <div id="avisoConfig" class="alerta alerta-advertencia" style="display:none">
+    ⚠️ <strong>Portal sin configurar:</strong> edita <code>js/firebase-config.js</code>
+    con los datos de tu proyecto Firebase ("su-finca-ecoandes") para conectar.
+  </div>
+
+  <!-- ============ ACCESO ============ -->
+  <section class="panel" id="panelAcceso">
+    <h2>👨‍🌾 Acceso al portal</h2>
+    <p class="seccion-sub">Tus lotes se guardan en tu cuenta y se ven igual en la app.</p>
+
+    <h3 style="color:var(--verde-oscuro)">Ya tengo cuenta</h3>
+    <div class="campo">
+      <label for="correo">Correo electrónico</label>
+      <input type="email" id="correo" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+    </div>
+    <div class="campo">
+      <label for="clave">Clave</label>
+      <div class="clave-ojo">
+        <input type="password" id="clave" placeholder="Tu clave" autocomplete="current-password">
+        <button type="button" id="ojoClave" class="ojo" aria-label="Mostrar clave">👁️</button>
+      </div>
+      <a href="#" id="enlaceOlvido" class="enlace-chico">¿Olvidaste tu clave?</a>
+    </div>
+    <div class="botones">
+      <button class="btn btn-primario" id="btnEntrar">Entrar</button>
+    </div>
+
+    <hr class="separador">
+
+    <h3 style="color:var(--verde-oscuro)">¿Primera vez aquí?</h3>
+    <div class="botones">
+      <button class="btn btn-claro" id="btnCrearCuenta" style="border:1px solid #cfd8d2">Crear mi cuenta</button>
+    </div>
+    <p class="seccion-sub">Te enviaremos un correo de confirmación.</p>
+
+    <!-- Formulario de registro (se abre al pulsar "Crear mi cuenta") -->
+    <div id="formRegistro" style="display:none">
+      <h3 style="color:var(--verde-oscuro)">📝 Crear mi cuenta</h3>
+      <div class="campo">
+        <label for="correoNuevo">Correo electrónico</label>
+        <input type="email" id="correoNuevo" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+      </div>
+      <div class="campo">
+        <label for="claveNueva">Crea una clave (6 o más caracteres)</label>
+        <div class="clave-ojo">
+          <input type="password" id="claveNueva" placeholder="Tu clave" autocomplete="new-password">
+          <button type="button" id="ojoClaveNueva" class="ojo" aria-label="Mostrar clave">👁️</button>
+        </div>
+      </div>
+      <div class="botones">
+        <button class="btn btn-primario" id="btnRegistrar">Crear mi cuenta</button>
+        <button class="btn btn-claro" id="btnVolverAcceso" style="border:1px solid #cfd8d2">Volver</button>
+      </div>
+      <p id="errorRegistro" class="seccion-sub" style="color:var(--rojo)"></p>
+    </div>
+
+    <hr class="separador">
+
+    <div class="botones">
+      <button class="btn btn-claro btn-pequeno" id="btnSinCuenta" style="border:1px solid #cfd8d2">Entrar sin cuenta</button>
+    </div>
+    <p class="seccion-sub">Puedes probar sin registrarte. Si luego creas tu cuenta, tus lotes se conservan.</p>
+
+    <p class="seccion-sub" style="margin-top:1rem"><small>Al crear tu cuenta aceptas el tratamiento de tus datos para el servicio Su Finca (Ley 1581 de 2012).</small></p>
+    <p id="errorAcceso" class="seccion-sub" style="color:var(--rojo)"></p>
+    <p id="okAcceso" class="seccion-sub" style="color:var(--verde-oscuro)"></p>
+  </section>
+
+  <!-- ============ MIS LOTES ============ -->
+  <section class="panel" id="panelLotes" style="display:none">
+    <h2>🗺️ Mis lotes <small id="contadorLotes" class="seccion-sub"></small></h2>
+    <p class="seccion-sub">Sincronizados con la app Android en tiempo real.</p>
+    <div id="barraCuenta" class="seccion-sub" style="display:none"></div>
+
+    <div id="avisoAnonimo" class="alerta alerta-advertencia" style="display:none">
+      <strong>Estás entrando sin cuenta.</strong> Tus lotes solo viven en este
+      navegador. Guárdalos en una cuenta gratis para no perderlos:
+      <div class="fila" style="margin-top:0.5rem">
+        <div class="campo">
+          <label for="correoVinculo">Tu correo</label>
+          <input type="email" id="correoVinculo" placeholder="tucorreo@ejemplo.com" autocomplete="email">
+        </div>
+        <div class="campo">
+          <label for="claveVinculo">Crea una clave (6 o más caracteres)</label>
+          <div class="clave-ojo">
+            <input type="password" id="claveVinculo" placeholder="Tu clave" autocomplete="new-password">
+            <button type="button" id="ojoClaveVinculo" class="ojo" aria-label="Mostrar clave">👁️</button>
+          </div>
+        </div>
+      </div>
+      <div class="botones">
+        <button class="btn btn-primario" id="btnVincular">Guardar mis lotes en una cuenta</button>
+      </div>
+      <p class="seccion-sub">Te enviaremos un correo de confirmación. Tus lotes se conservan.</p>
+      <p id="errorVinculo" class="seccion-sub" style="color:var(--rojo)"></p>
+    </div>
+
+    <div id="listaLotes"><p class="seccion-sub">Cargando lotes…</p></div>
+
+    <h3 id="tituloFormLote" style="color:var(--verde-oscuro)">➕ Nuevo lote</h3>
+    <form id="formLote">
+      <input type="hidden" id="loteId">
+      <div class="fila">
+        <div class="campo">
+          <label for="loteNombre">Nombre del lote *</label>
+          <input id="loteNombre" required maxlength="80" placeholder="Ej. Lote de arriba">
+        </div>
+        <div class="campo">
+          <label for="loteCultivo">Cultivo *</label>
+          <input id="loteCultivo" required maxlength="80" placeholder="Ej. Café, Arroz, Maíz">
+        </div>
+      </div>
+      <div class="fila">
+        <div class="campo">
+          <label for="loteHectareas">Hectáreas *</label>
+          <input id="loteHectareas" type="number" step="0.01" min="0.01" required placeholder="Ej. 2.5">
+        </div>
+        <div class="campo">
+          <label for="loteNotas">Notas</label>
+          <input id="loteNotas" maxlength="300" placeholder="Opcional">
+        </div>
+      </div>
+      <div class="fila">
+        <div class="campo">
+          <label for="loteLat">Latitud (GPS)</label>
+          <input id="loteLat" type="number" step="0.000001" placeholder="Ej. 4.4389">
+        </div>
+        <div class="campo">
+          <label for="loteLng">Longitud (GPS)</label>
+          <input id="loteLng" type="number" step="0.000001" placeholder="Ej. -75.2322">
+        </div>
+      </div>
+      <div class="fila">
+        <div class="campo">
+          <button type="button" class="btn btn-claro btn-pequeno" id="btnUbicacionLote" style="border:1px solid #cfd8d2">📍 Usar mi ubicación</button>
+          <span id="msgUbicacion" class="seccion-sub"></span>
+        </div>
+      </div>
+      <details id="fichaTerreno" style="margin:8px 0; border:1px solid #cfd8d2; border-radius:10px; padding:10px 12px">
+        <summary style="cursor:pointer; font-weight:700; color:var(--verde-oscuro)">🌱 Datos del terreno (opcional)</summary>
+        <div class="fila" style="margin-top:8px">
+          <div class="campo">
+            <label for="loteTipoSuelo">¿Cómo es la tierra?</label>
+            <select id="loteTipoSuelo">
+              <option value="">— Sin dato —</option>
+              <option value="negra">Negra (buena)</option>
+              <option value="arcillosa">Barrosa (se encharca)</option>
+              <option value="arenosa">Arenosa (seca rápido)</option>
+              <option value="pedregosa">Pedregosa</option>
+              <option value="no_se">No sé</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="loteRiego">¿Cómo le llega el agua?</label>
+            <select id="loteRiego">
+              <option value="">— Sin dato —</option>
+              <option value="lluvia">Solo lluvia</option>
+              <option value="goteo">Goteo</option>
+              <option value="aspersion">Aspersión</option>
+              <option value="gravedad">Gravedad</option>
+              <option value="pozo_rio">De pozo o río</option>
+              <option value="sin_agua">No tiene agua</option>
+            </select>
+          </div>
+        </div>
+        <div class="fila">
+          <div class="campo">
+            <label for="lotePendiente">¿El terreno es…?</label>
+            <select id="lotePendiente">
+              <option value="">— Sin dato —</option>
+              <option value="plano">Plano</option>
+              <option value="ladeado">Un poco ladeado</option>
+              <option value="loma">Loma empinada</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="loteHistorial">¿Qué hubo antes aquí?</label>
+            <input id="loteHistorial" maxlength="200" placeholder="Ej. antes era potrero">
+          </div>
+        </div>
+      </details>
+      <div class="botones">
+        <button type="submit" class="btn btn-primario btn-pequeno" id="btnGuardarLote">Guardar lote</button>
+        <button type="button" class="btn btn-claro btn-pequeno" id="btnCancelarLote" style="border:1px solid #cfd8d2; display:none">Cancelar</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ SENSORES ============ -->
+  <section class="panel" id="panelSensores" style="display:none">
+    <h2>🌡️ Sensores del campo</h2>
+    <p class="seccion-sub">Lo último que midieron tus sensores, en tiempo real. Solo tú ves los de tus lotes.</p>
+    <div id="listaSensores"><p class="seccion-sub">Cargando sensores…</p></div>
+    <div class="botones" style="margin-top:1rem">
+      <button class="btn btn-claro btn-pequeno" id="btnDatosPrueba" style="border:1px solid #cfd8d2">🧪 Generar datos de prueba</button>
+    </div>
+    <p class="seccion-sub"><small>Crea lecturas de ejemplo en tu primer lote para ver cómo se ve el panel.</small></p>
+    <div id="msgDatosPrueba" style="margin-top:0.6rem"></div>
+  </section>
+
+  <!-- ============ PRODUCTOS ICA ============ -->
+  <section class="panel" id="panelProductos" style="display:none">
+    <h2>🧪 Productos con registro ICA</h2>
+    <p class="seccion-sub">Toca un producto para ver para qué sirve y su información técnica.</p>
+    <div class="campo">
+      <input type="text" id="prodBusqueda" placeholder="🔍 Buscar producto, cultivo o plaga…" autocomplete="off">
+    </div>
+    <div id="vistaProductos"><p class="seccion-sub">Cargando productos…</p></div>
+    <div class="aviso-etiqueta" style="margin:1rem 0 0">
+      <strong>⚠️ La etiqueta física manda.</strong> Verifica siempre la dosis en el
+      empaque del producto y consulta a un ingeniero agrónomo.
+    </div>
+  </section>
+
+  <!-- ============ CALCULADORA DE PESTICIDAS ============ -->
+  <section class="panel" id="panelCalculadora" style="display:none">
+    <h2>🧮 Calculadora de pesticidas</h2>
+    <p class="seccion-sub">Solo productos con registro ICA y datos de la etiqueta oficial.</p>
+
+    <!-- Paso 1 -->
+    <div id="calcPaso1" class="paso-calc">
+      <h3><span class="paso-num">1</span>¿Qué producto va a usar?</h3>
+      <div class="campo">
+        <label for="calcBusqueda">Buscar producto</label>
+        <input type="text" id="calcBusqueda" placeholder="Nombre, ingrediente o cultivo…" autocomplete="off">
+      </div>
+      <div id="calcListaProductos" class="botones"></div>
+    </div>
+
+    <!-- Paso 2 -->
+    <div id="calcPaso2" class="paso-calc" style="display:none">
+      <h3><span class="paso-num">2</span>Cultivo, tamaño y equipo</h3>
+      <p><strong id="calcProductoNombre"></strong>
+        <button class="btn btn-claro btn-pequeno" id="calcCambiarProducto" style="border:1px solid #cfd8d2">Cambiar</button>
+      </p>
+      <div class="campo">
+        <label for="calcUso">¿En qué cultivo y contra qué plaga?</label>
+        <select id="calcUso"></select>
+      </div>
+      <div class="campo">
+        <label for="calcArea">¿Cuántas hectáreas va a fumigar?</label>
+        <input type="number" id="calcArea" min="0" step="0.1" inputmode="decimal" placeholder="Ej.: 2.5">
+      </div>
+      <div class="campo">
+        <label for="calcDosisPlaneada">Si ya sabe la dosis que piensa aplicar (opcional)</label>
+        <input type="number" id="calcDosisPlaneada" min="0" step="any" inputmode="decimal" placeholder="Ej.: 300">
+      </div>
+      <div class="campo">
+        <label for="calcDron">¿Con qué equipo va a fumigar?</label>
+        <select id="calcDron"></select>
+      </div>
+      <div class="botones">
+        <button class="btn btn-primario" id="calcCalcular">Calcular</button>
+      </div>
+    </div>
+
+    <!-- Paso 3 -->
+    <div id="calcPaso3" class="paso-calc" style="display:none">
+      <h3><span class="paso-num">3</span>Esto necesita</h3>
+      <div id="calcResultado"></div>
+      <div class="botones" style="margin-top:1rem">
+        <button class="btn btn-claro btn-pequeno" id="calcNuevo" style="border:1px solid #cfd8d2">↩️ Otro cálculo</button>
+      </div>
+      <div class="aviso-etiqueta" style="margin:1rem 0 0">
+        <strong>⚠️ La etiqueta física manda.</strong> Verifique siempre la dosis en el
+        empaque del producto y consulte a un ingeniero agrónomo.
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="pie">
+  <p><strong>Su Finca</strong> — una aplicación de <strong>EcoAndes Drone</strong> 🇨🇴</p>
+  <p>Portal conectado al mismo backend de la app Android</p>
+</footer>
+
+<script type="module" src="js/portal.js?v=20261006c"></script>
+</body>
+</html>
