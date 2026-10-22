@@ -379,8 +379,14 @@ function iniciarPortal(auth, db) {
     const a = [];
     if (lec.humSuelo != null && lec.humSuelo < 30)
       a.push(`⚠️ La tierra está seca (${Math.round(lec.humSuelo)}% de humedad). Conviene regar.`);
-    if (lec.tempAmb != null && lec.tempAmb < 5)
-      a.push(`🥶 Riesgo de helada: ${lec.tempAmb.toFixed(1)} °C. Proteja el cultivo.`);
+    const valorTemp = lec.tempAmb;
+    const tAmb = (
+      typeof valorTemp === "number" ||
+      (typeof valorTemp === "string" && valorTemp.trim() !== "")
+    ) ? Number(valorTemp) : NaN;
+
+    if (Number.isFinite(tAmb) && tAmb < 5)
+      a.push(`🥶 Riesgo de helada: ${tAmb.toFixed(1)} °C. Proteja el cultivo.`);
     if (lec.bateria != null && lec.bateria < 20)
       a.push(`🔋 Batería baja del sensor (${Math.round(lec.bateria)}%).`);
     return a;
