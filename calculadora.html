@@ -772,7 +772,8 @@
         .footer-logo img{content:url("assets/logo-estatico.webp")}
       }
     </style>
-  </head>
+  <style>.ic{width:1em;height:1em;display:inline-block;vertical-align:-.12em;flex:none}.trust-item svg.ic{color:var(--green-dark);font-size:1rem}.data-row svg.ic{color:var(--green-dark);font-size:1.1rem;margin-top:3px;width:22px;text-align:center;flex:none}.norm-item svg.ic{color:var(--green-dark);font-size:1.5rem;margin-bottom:14px;display:block}.check-points svg.ic{color:var(--green-dark)}.disclaimer svg.ic{color:var(--green-dark);margin-top:4px}.terrain b svg.ic{color:var(--green-dark);margin-right:7px}.calc-notes svg.ic{color:var(--green-dark);margin-right:6px}.detail svg.ic{color:var(--green-dark);margin-top:4px;width:22px;text-align:center;flex:none}.chip svg.ic{font-size:.85rem}.official li svg.ic{color:#b3541e;margin-top:4px}.footer-contact svg.ic{color:var(--green-dark);font-size:1.05rem}.wa-btn svg.ic{font-size:1.35rem}.ic{transition:transform .3s ease}a:hover .ic,button:hover .ic{transform:translateY(-1px) scale(1.09)}.anim-dron{animation:icFloat 3.4s ease-in-out infinite}@keyframes icFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-.09em) rotate(1.6deg)}}.anim-onda{animation:icPulse 2.6s ease-in-out infinite}@keyframes icPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}.anim-brote{animation:icSway 3.8s ease-in-out infinite;transform-origin:50% 92%}@keyframes icSway{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.2deg)}}.semaforo-anim .sf-l{opacity:.22}.semaforo-anim .sf-r{animation:sfR 3.6s linear infinite}.semaforo-anim .sf-a{animation:sfA 3.6s linear infinite}.semaforo-anim .sf-v{animation:sfV 3.6s linear infinite}@keyframes sfR{0%,28%{opacity:1}34%,100%{opacity:.22}}@keyframes sfA{0%,32%{opacity:.22}38%,62%{opacity:1}68%,100%{opacity:.22}}@keyframes sfV{0%,66%{opacity:.22}72%,96%{opacity:1}100%{opacity:.22}}@media (prefers-reduced-motion: reduce){.ic{animation:none!important;transition:none!important}}</style>
+</head>
   <body>
 <header class="site-header">
       <div class="header-in">
@@ -780,7 +781,7 @@
           <img class="brand-logo" src="assets/logo-animado.gif" alt="Logotipo animado EcoAndes Drone con hélices en movimiento" />
         </a>
         <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false">
-          <i class="fa-solid fa-bars" aria-hidden="true"></i>
+          <svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-menu"></use></svg>
         </button>
         <nav class="main-nav" id="mainNav" aria-label="Navegación principal">
           <ul>
@@ -802,7 +803,7 @@
 <div class="page-view" id="view-calculadora">
       <div class="page-hero">
         <div class="in">
-          <span class="page-crumb"><a href="index.html" data-nav="inicio">Inicio</a> <i class="fa-solid fa-chevron-right" aria-hidden="true"></i> Calculadora</span>
+          <span class="page-crumb"><a href="index.html" data-nav="inicio">Inicio</a> <svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-chevron-right"></use></svg> Calculadora</span>
           <h1>Calculadora de aspersión</h1>
           <p>Seleccione su cultivo, el área y el tipo de terreno: el estimado se calcula en vivo y puede enviarlo por WhatsApp.</p>
         </div>
@@ -839,11 +840,11 @@
               <div class="field">
                 <label>Tipo de terreno</label>
                 <div class="terrain">
-                  <label><input type="radio" name="terreno" value="plano" checked /><b><i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i>Plano</b><small>Terreno parejo, de fácil acceso</small><span class="price">$70.000 / ha</span></label>
-                  <label><input type="radio" name="terreno" value="montanoso" /><b><i class="fa-solid fa-mountain" aria-hidden="true"></i>Montañoso</b><small>Ladera o terreno quebrado</small><span class="price">$80.000 / ha</span></label>
+                  <label><input type="radio" name="terreno" value="plano" checked /><b><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-move-horizontal"></use></svg>Plano</b><small>Terreno parejo, de fácil acceso</small><span class="price">$70.000 / ha</span></label>
+                  <label><input type="radio" name="terreno" value="montanoso" /><b><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-mountain"></use></svg>Montañoso</b><small>Ladera o terreno quebrado</small><span class="price">$80.000 / ha</span></label>
                 </div>
               </div>
-              <button class="btn btn-green" type="submit" style="width:100%;justify-content:center"><i class="fa-solid fa-calculator" aria-hidden="true"></i> Calcular estimado</button>
+              <button class="btn btn-green" type="submit" style="width:100%;justify-content:center"><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-calculator"></use></svg> Calcular estimado</button>
             </form>
 
             <div class="calc-result" id="calcResult" aria-live="polite">
@@ -853,9 +854,9 @@
               <div class="calc-lines" id="calcLines"></div>
               <a class="btn btn-green" id="calcWa" href="https://wa.me/573223906293" target="_blank" rel="noopener" style="width:100%;justify-content:center"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Solicitar por WhatsApp</a>
               <div class="calc-notes">
-                <div><i class="fa-solid fa-circle-info" aria-hidden="true"></i>Los costos de desplazamiento se cotizan aparte, según la ubicación del lote.</div>
-                <div><i class="fa-solid fa-circle-info" aria-hidden="true"></i>El estimado no incluye productos o químicos: los suministra el agricultor según la recomendación de su agrónomo, o se cotizan por separado.</div>
-                <div><i class="fa-solid fa-circle-info" aria-hidden="true"></i>Incluye planificación de la misión y aplicación aérea. Cotización final sujeta a visita técnica.</div>
+                <div><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-info"></use></svg>Los costos de desplazamiento se cotizan aparte, según la ubicación del lote.</div>
+                <div><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-info"></use></svg>El estimado no incluye productos o químicos: los suministra el agricultor según la recomendación de su agrónomo, o se cotizan por separado.</div>
+                <div><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-info"></use></svg>Incluye planificación de la misión y aplicación aérea. Cotización final sujeta a visita técnica.</div>
               </div>
             </div>
           </div>
@@ -875,8 +876,8 @@
       <p class="footer-legal">© 2026 · NIT: 902057040-2 · Matrícula: 399063 · Rep. Legal: Jeremy Rico Morales</p>
       <div class="footer-contact">
         <a href="https://wa.me/573223906293" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp +57 322 3906293</a>
-        <a href="mailto:servicioalcliente@ecoandesdrone.com"><i class="fa-solid fa-envelope" aria-hidden="true"></i> servicioalcliente@ecoandesdrone.com</a>
-        <span><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Ibagué, Tolima, Colombia</span>
+        <a href="mailto:servicioalcliente@ecoandesdrone.com"><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-mail"></use></svg> servicioalcliente@ecoandesdrone.com</a>
+        <span><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-map-pin"></use></svg> Ibagué, Tolima, Colombia</span>
       </div>
       <div class="social-row" aria-label="Redes sociales de EcoAndes Drone">
         <a href="https://www.instagram.com/ecoandesdrone/" target="_blank" rel="noopener" aria-label="Instagram de EcoAndes Drone"><i class="fa-brands fa-instagram" aria-hidden="true"></i></a>
@@ -936,7 +937,7 @@
           if (nav.classList.contains('open')) {
             nav.classList.remove('open');
             toggle.setAttribute('aria-expanded', 'false');
-            toggle.innerHTML = '<i class="fa-solid fa-bars" aria-hidden="true"></i>';
+            toggle.innerHTML = '<svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-menu"></use></svg>';
           }
         }
 
@@ -950,8 +951,8 @@
           var open = nav.classList.toggle('open');
           toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
           toggle.innerHTML = open
-            ? '<i class="fa-solid fa-xmark" aria-hidden="true"></i>'
-            : '<i class="fa-solid fa-bars" aria-hidden="true"></i>';
+            ? '<svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-x"></use></svg>'
+            : '<svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-menu"></use></svg>';
         });
 
         /* ============ VIDEOS DE EQUIPOS: reproducción al entrar en pantalla ============ */
@@ -1149,7 +1150,7 @@
             return '<article class="news-card"><div class="news-top"><span class="tag' + cls + '">' + i.cat + '</span>' + langBadge +
               '</div><h3><a href="' + href + '" target="_blank" rel="noopener">' + escapeHtml(i.title) +
               '</a></h3><p class="ex">' + escapeHtml(i.desc) + '</p><div class="news-card-meta"><span>' + escapeHtml(i.src) + ' · ' + fmtDate(new Date(i.date)) +
-              '</span><a class="read-link" href="' + href + '" target="_blank" rel="noopener">Leer <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></article>';
+              '</span><a class="read-link" href="' + href + '" target="_blank" rel="noopener">Leer <svg class="ic" aria-hidden="true" focusable="false"><use href="assets/assets/iconos.svg#ic-arrow-right"></use></svg></a></div></article>';
           }).join('');
         }
         function applyNews(items, ts, fromCache) {
