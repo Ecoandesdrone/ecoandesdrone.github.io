@@ -261,6 +261,7 @@ body {
   font-weight: 700; margin: 0.25rem 0.25rem 0 0; white-space: nowrap;
 }
 .chip-gris { background: #eef1ee; color: var(--texto-suave); }
+.chip-simulada { background: #fdf0d5; color: #7a5b00; }
 
 /* ============ Calculadora: pasos y resultado llamativo ============ */
 .paso-calc {

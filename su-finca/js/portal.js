@@ -399,10 +399,10 @@ function iniciarPortal(auth, db) {
           <small class="seccion-sub">Sin sensores todavía. Cuando los instales en este lote, aquí verás la temperatura y la humedad en tiempo real.</small></div></div>`;
       }
       const alertas = alertasSensor(lec).map((m) =>
-        `<div class="alerta alerta-advertencia" style="margin:0.4rem 0">${esc(m)}</div>`).join("");
+        `<div class="alerta alerta-advertencia" style="margin:0.4rem 0">${lec.simulado ? "Datos de prueba: " : ""}${esc(m)}</div>`).join("");
       const fmt = (v, dec, suf) => v != null ? `${Number(v).toFixed(dec)}${suf}` : "—";
       return `<div class="lote"><div class="info">
-        <strong>${esc(l.nombre)}</strong> <small class="seccion-sub">· ${esc(haceCuanto(lec.ts))}</small><br>
+        <strong>${esc(l.nombre)}</strong>${lec.simulado ? ` <span class="chip chip-simulada">SIMULADA</span>` : ""} <small class="seccion-sub">· ${esc(haceCuanto(lec.ts))}</small><br>
         <span style="font-size:1.4rem">🌡️ ${fmt(lec.tempAmb, 1, " °C")}</span> &nbsp;
         <span style="font-size:1.4rem">💧 ${fmt(lec.humAmb, 0, " %")}</span> &nbsp;
         <span style="font-size:1.4rem">🌱 ${fmt(lec.humSuelo, 0, " %")}</span>
@@ -432,7 +432,8 @@ function iniciarPortal(auth, db) {
         humAmb: 65 + Math.sin(i / 3) * 10 + (Math.random() - 0.5) * 4,
         humSuelo: 45 - i * 2 + (Math.random() - 0.5) * 3,
         bateria: 87 - i,
-        dispositivoId: "nodo-01"
+        dispositivoId: "nodo-01",
+        simulado: true
       });
     }
     try {
