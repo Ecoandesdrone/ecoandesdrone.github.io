@@ -1,6 +1,6 @@
 # MATRIZ DE ICONOS — H03-02 · Sistema de líneas premium EcoAndes Drone
 
-**Estado:** v2 — observaciones del dictamen provisional del auditor incorporadas (mapeo glifo por glifo, totales exactos, especificación del sprite y preservación funcional de Su Finca). Propuesta para dictamen definitivo y aprobación del propietario. **Nada aplicado.**
+**Estado:** v2 — observaciones del dictamen provisional del auditor incorporadas (mapeo glifo por glifo, totales exactos, especificación del sprite y preservación funcional de Su Finca) **+ corrección del caso de la bandera 🇨🇴** (observación del auditor al leer la v2 en GitHub; decisión del propietario, 2026-10-22: sustituir por bandera SVG dibujada). Propuesta para dictamen definitivo y aprobación del propietario. **Nada aplicado.**
 **Decisión base (propietario, 2026-10-22):** adoptar iconografía de contorno (líneas) en todo el sitio, una sola familia, verde corporativo.
 **Excepciones expresas:**
 - **El LOGO de EcoAndes Drone NO se toca** (animado, a todo color; encabezado blanco y splash quedan como están).
@@ -96,6 +96,7 @@
 | 👨‍🌾 | Botón «Entrar al portal» | Persona / acceso |
 | ⚠️ | Aviso «Importante» | Triángulo de advertencia |
 | 💬 | Botón «WhatsApp (próximamente)» | Al activarse: logo oficial de WhatsApp (excepción de marca) |
+| 🇨🇴 | Pie de página (L92): «una aplicación de EcoAndes Drone 🇨🇴» | **Bandera SVG dibujada** `ic-bandera-co` — franjas oficiales (amarillo 50 %, azul 25 %, rojo 25 %). Decisión del propietario (2026-10-22): el emoji no se conserva; en Windows ni siquiera se renderiza como bandera (se ve «CO») |
 
 ## Resumen de la matriz — TOTALES EXACTOS (sin aproximaciones ni doble conteo)
 
@@ -108,7 +109,7 @@ Conteo por máquina sobre las 220 instancias `<i>` del sitio completo (cada inst
 | **SUSTITUIR** — sólidos → contorno | **167** | 50 |
 | **Total** | **220** | **55** |
 
-Fuera de ese conteo: **5 SVG de contorno existentes → CONSERVAR** (ya son del sistema) y **12 emojis (9 distintos) en `su-finca/index.html` → SUSTITUIR**.
+Fuera de ese conteo: **5 SVG de contorno existentes → CONSERVAR** (ya son del sistema) y **12 apariciones de emojis (10 símbolos distintos) en `su-finca/index.html` → SUSTITUIR — incluida la bandera 🇨🇴 del pie (L92), por decisión expresa del propietario**.
 
 ## Mapeo cerrado glifo por glifo (observación 1 del auditor)
 
@@ -169,7 +170,7 @@ Nombre final = identificador del símbolo en el sprite. Referencia de trazo: fam
 | fa-phone | 1 | Sustituir | `ic-phone` |
 | fa-whatsapp (21), fa-instagram (9), fa-facebook-f (9), fa-tiktok (9) | 48 | **Conservar** | Logos oficiales de marca, sin cambio |
 
-Emojis de `su-finca/index.html` → glifo final: 🌱→`ic-sprout` · 🗺️→`ic-map-pinned` · 🧪→`ic-flask-conical` · 📸→`ic-doctor-cultivos` (cámara con hoja, propio) · 🚦→`ic-semaforo` (propio) · 📲→`ic-descargar-app` (teléfono con flecha de descarga, propio) · 👨‍🌾→`ic-acceso-portal` (persona) · ⚠️→`ic-triangle-alert` · 💬→`ic-message-circle` (al activarse WhatsApp, pasará al logo oficial).
+Emojis de `su-finca/index.html` → glifo final: 🌱→`ic-sprout` · 🗺️→`ic-map-pinned` · 🧪→`ic-flask-conical` · 📸→`ic-doctor-cultivos` (cámara con hoja, propio) · 🚦→`ic-semaforo` (propio) · 📲→`ic-descargar-app` (teléfono con flecha de descarga, propio) · 👨‍🌾→`ic-acceso-portal` (persona) · ⚠️→`ic-triangle-alert` · 💬→`ic-message-circle` (al activarse WhatsApp, pasará al logo oficial) · 🇨🇴→`ic-bandera-co` (bandera de Colombia dibujada: amarillo 50 %, azul 25 %, rojo 25 %; excepción NO conservada — decisión del propietario, 2026-10-22).
 
 ## Especificación técnica del sprite SVG (observación 3 del auditor)
 
@@ -197,4 +198,4 @@ Emojis de `su-finca/index.html` → glifo final: 🌱→`ic-sprout` · 🗺️�
 5. Dictamen del auditor sobre la rama.
 6. Fusión solo con autorización expresa del propietario; verificación en vivo y validación visual final.
 
-*Inventario verificado el 2026-10-22 sobre los archivos de `main`, reconciliado con las cifras del auditor: **220 etiquetas `<i>` con Font Awesome en el sitio completo** (202 en las 9 páginas del primer alcance + 18 en `su-finca.html`, la página Su Finca del sitio, enlazada desde la navegación de todas las páginas), **5 SVG de contorno** y **12 emojis — todos en `su-finca/index.html`** (mapa por línea: L13 y L24 marca 🌱; L33 📲 Descargar la app; L34 👨‍🌾 Entrar al portal; L42 🗺️ Mis lotes; L47 🧪 Calculadora; L52 📸 Doctor; L57 🚦 Semáforo; L64 ⚠️ aviso; L75 📲 Descargar APK; L86 💬 WhatsApp próximamente). El dron `fa-helicopter` aparece exactamente 1 vez en cada una de 5 páginas: index, nosotros, servicios, tecnologia y noticias.*
+*Inventario verificado el 2026-10-22 sobre los archivos de `main`, reconciliado con las cifras del auditor: **220 etiquetas `<i>` con Font Awesome en el sitio completo** (202 en las 9 páginas del primer alcance + 18 en `su-finca.html`, la página Su Finca del sitio, enlazada desde la navegación de todas las páginas), **5 SVG de contorno** y **12 apariciones de emojis — todos en `su-finca/index.html`** (mapa por línea, corregido tras la observación del auditor sobre la bandera: L13 y L24 marca 🌱; L33 📲 Descargar la app; L34 👨‍🌾 Entrar al portal; L42 🗺️ Mis lotes; L47 🧪 Calculadora; L52 📸 Doctor; L57 🚦 Semáforo; L64 ⚠️ aviso; L75 📲 Descargar APK; L86 💬 WhatsApp próximamente; **L92 🇨🇴 pie de página → sustituir por bandera SVG dibujada, decisión del propietario**). El dron `fa-helicopter` aparece exactamente 1 vez en cada una de 5 páginas: index, nosotros, servicios, tecnologia y noticias.*
