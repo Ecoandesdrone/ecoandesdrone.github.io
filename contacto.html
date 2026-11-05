@@ -993,7 +993,8 @@
         (function () {
           var form = document.getElementById('calcForm');
           if (!form) return;
-          var RATES = { plano: 70000, montanoso: 80000 };
+          var RATES = { plano: 15000, montanoso: 15000 };
+          var MINIMO = 240000;
           var LABEL = { plano: 'Plano', montanoso: 'Montañoso' };
           var err = document.getElementById('calcError');
           var res = document.getElementById('calcResult');
@@ -1010,16 +1011,25 @@
           function valid(d) { return d.cultivo && d.aplic && d.terreno && d.ha > 0; }
 
           function renderCalc(d) {
-            var rate = RATES[d.terreno], total = rate * d.ha;
+            var rate = RATES[d.terreno], bruto = rate * d.ha;
+            var aplicaMin = bruto < MINIMO, total = aplicaMin ? MINIMO : bruto;
+            var anticipo = total / 2;
             document.getElementById('calcTotal').textContent = fmt(total);
-            document.getElementById('calcLines').innerHTML =
-              '<div><span>Tarifa base (' + LABEL[d.terreno] + ')</span><strong>' + fmt(rate) + ' / ha</strong></div>' +
+            var lines =
+              '<div><span>Tarifa (' + LABEL[d.terreno] + ')</span><strong>desde ' + fmt(rate) + ' / ha</strong></div>' +
               '<div><span>Área</span><strong>' + d.ha.toLocaleString('es-CO') + ' ha</strong></div>' +
+              '<div><span>Subtotal por área</span><strong>' + fmt(bruto) + '</strong></div>';
+            if (aplicaMin) lines += '<div><span>Mínimo por proyecto aplicado</span><strong>' + fmt(MINIMO) + '</strong></div>';
+            lines +=
+              '<div><span>Anticipo (50%)</span><strong>' + fmt(anticipo) + '</strong></div>' +
+              '<div><span>Saldo a la entrega (50%)</span><strong>' + fmt(anticipo) + '</strong></div>' +
               '<div><span>Cultivo</span><strong>' + d.cultivo + '</strong></div>' +
               '<div><span>Aplicación</span><strong>' + d.aplic + '</strong></div>';
+            document.getElementById('calcLines').innerHTML = lines;
             var msg = 'Hola EcoAndes Drone, quiero cotizar aspersión con dron.\n' +
               'Cultivo: ' + d.cultivo + '\nHectáreas: ' + d.ha + '\nAplicación: ' + d.aplic +
               '\nTerreno: ' + LABEL[d.terreno] + '\nEstimado web: ' + fmt(total) +
+              (aplicaMin ? ' (mínimo por proyecto)' : '') +
               '\nQuedo atento a la cotización formal.';
             document.getElementById('calcWa').href = 'https://wa.me/573223906293?text=' + encodeURIComponent(msg);
             res.classList.add('show');

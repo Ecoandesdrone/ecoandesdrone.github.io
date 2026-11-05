@@ -840,8 +840,8 @@
               <div class="field">
                 <label>Tipo de terreno</label>
                 <div class="terrain">
-                  <label><input type="radio" name="terreno" value="plano" checked /><b><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/iconos.svg#ic-move-horizontal"></use></svg>Plano</b><small>Terreno parejo, de fácil acceso</small><span class="price">$70.000 / ha</span></label>
-                  <label><input type="radio" name="terreno" value="montanoso" /><b><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/iconos.svg#ic-mountain"></use></svg>Montañoso</b><small>Ladera o terreno quebrado</small><span class="price">$80.000 / ha</span></label>
+                  <label><input type="radio" name="terreno" value="plano" checked /><b><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/iconos.svg#ic-move-horizontal"></use></svg>Plano</b><small>Terreno parejo, de fácil acceso</small><span class="price">Desde $15.000 / ha</span></label>
+                  <label><input type="radio" name="terreno" value="montanoso" /><b><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/iconos.svg#ic-mountain"></use></svg>Montañoso</b><small>Ladera o terreno quebrado</small><span class="price">Desde $15.000 / ha</span></label>
                 </div>
               </div>
               <button class="btn btn-green" type="submit" style="width:100%;justify-content:center"><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/iconos.svg#ic-calculator"></use></svg> Calcular estimado</button>
@@ -854,9 +854,10 @@
               <div class="calc-lines" id="calcLines"></div>
               <a class="btn btn-green" id="calcWa" href="https://wa.me/573223906293" target="_blank" rel="noopener" style="width:100%;justify-content:center"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Solicitar por WhatsApp</a>
               <div class="calc-notes">
-                <div><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/iconos.svg#ic-info"></use></svg>Los costos de desplazamiento se cotizan aparte, según la ubicación del lote.</div>
+                <div><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/iconos.svg#ic-info"></use></svg>Tarifa desde $15.000 por hectárea, con un mínimo de $240.000 por proyecto. Pago: 50% de anticipo y 50% a la entrega.</div>
                 <div><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/iconos.svg#ic-info"></use></svg>El estimado no incluye productos o químicos: los suministra el agricultor según la recomendación de su agrónomo, o se cotizan por separado.</div>
                 <div><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/iconos.svg#ic-info"></use></svg>Incluye planificación de la misión y aplicación aérea. Cotización final sujeta a visita técnica.</div>
+                <div><svg class="ic" aria-hidden="true" focusable="false"><use href="assets/iconos.svg#ic-info"></use></svg>El desplazamiento está incluido en nuestra zona habitual de trabajo; fuera de ella, el ajuste por distancia se avisa antes de confirmar.</div>
               </div>
             </div>
           </div>
@@ -998,7 +999,8 @@
         (function () {
           var form = document.getElementById('calcForm');
           if (!form) return;
-          var RATES = { plano: 70000, montanoso: 80000 };
+          var RATES = { plano: 15000, montanoso: 15000 };
+          var MINIMO = 240000;
           var LABEL = { plano: 'Plano', montanoso: 'Montañoso' };
           var err = document.getElementById('calcError');
           var res = document.getElementById('calcResult');
@@ -1015,16 +1017,25 @@
           function valid(d) { return d.cultivo && d.aplic && d.terreno && d.ha > 0; }
 
           function renderCalc(d) {
-            var rate = RATES[d.terreno], total = rate * d.ha;
+            var rate = RATES[d.terreno], bruto = rate * d.ha;
+            var aplicaMin = bruto < MINIMO, total = aplicaMin ? MINIMO : bruto;
+            var anticipo = total / 2;
             document.getElementById('calcTotal').textContent = fmt(total);
-            document.getElementById('calcLines').innerHTML =
-              '<div><span>Tarifa base (' + LABEL[d.terreno] + ')</span><strong>' + fmt(rate) + ' / ha</strong></div>' +
+            var lines =
+              '<div><span>Tarifa (' + LABEL[d.terreno] + ')</span><strong>desde ' + fmt(rate) + ' / ha</strong></div>' +
               '<div><span>Área</span><strong>' + d.ha.toLocaleString('es-CO') + ' ha</strong></div>' +
+              '<div><span>Subtotal por área</span><strong>' + fmt(bruto) + '</strong></div>';
+            if (aplicaMin) lines += '<div><span>Mínimo por proyecto aplicado</span><strong>' + fmt(MINIMO) + '</strong></div>';
+            lines +=
+              '<div><span>Anticipo (50%)</span><strong>' + fmt(anticipo) + '</strong></div>' +
+              '<div><span>Saldo a la entrega (50%)</span><strong>' + fmt(anticipo) + '</strong></div>' +
               '<div><span>Cultivo</span><strong>' + d.cultivo + '</strong></div>' +
               '<div><span>Aplicación</span><strong>' + d.aplic + '</strong></div>';
+            document.getElementById('calcLines').innerHTML = lines;
             var msg = 'Hola EcoAndes Drone, quiero cotizar aspersión con dron.\n' +
               'Cultivo: ' + d.cultivo + '\nHectáreas: ' + d.ha + '\nAplicación: ' + d.aplic +
               '\nTerreno: ' + LABEL[d.terreno] + '\nEstimado web: ' + fmt(total) +
+              (aplicaMin ? ' (mínimo por proyecto)' : '') +
               '\nQuedo atento a la cotización formal.';
             document.getElementById('calcWa').href = 'https://wa.me/573223906293?text=' + encodeURIComponent(msg);
             res.classList.add('show');
