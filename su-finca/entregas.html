@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis entregas — Su Finca | EcoAndes Drone</title>
+  <meta name="description" content="Consulta las entregas de EcoAndes Drone para tu finca: informes de lote, conteos de ganado y mapas, con el código de tu finca.">
+  <link rel="stylesheet" href="css/styles.css">
+<style>.ic{width:1em;height:1em;display:inline-block;vertical-align:-.12em;flex:none}.ic-bandera{width:1.35em;height:.9em;display:inline-block;vertical-align:-.08em;border-radius:2px}.ic{transition:transform .3s ease;animation:icIn .55s ease both,icFloatAll 3.4s ease-in-out .6s infinite}@keyframes icIn{from{opacity:0;transform:translateY(.18em)}to{opacity:1;transform:translateY(0)}}@keyframes icFloatAll{0%,100%{transform:translateY(0)}50%{transform:translateY(-.1em)}}header .ic,footer .ic,nav .ic,p .ic,li .ic{animation:icIn .55s ease both}a:hover .ic,button:hover .ic{transform:translateY(-1px) scale(1.09)}.anim-dron{animation:icIn .55s ease both,icFloat 2.8s ease-in-out .6s infinite}@keyframes icFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-.2em) rotate(3deg)}}.anim-onda{animation:icIn .55s ease both,icPulse 2.2s ease-in-out .6s infinite}@keyframes icPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}.anim-brote{animation:icIn .55s ease both,icSway 3s ease-in-out .6s infinite;transform-origin:50% 92%}@keyframes icSway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}.semaforo-anim .sf-l{opacity:.22}.semaforo-anim .sf-r{animation:sfR 3.6s linear infinite}.semaforo-anim .sf-a{animation:sfA 3.6s linear infinite}.semaforo-anim .sf-v{animation:sfV 3.6s linear infinite}@keyframes sfR{0%,28%{opacity:1}34%,100%{opacity:.22}}@keyframes sfA{0%,32%{opacity:.22}38%,62%{opacity:1}68%,100%{opacity:.22}}@keyframes sfV{0%,66%{opacity:.22}72%,96%{opacity:1}100%{opacity:.22}}@media (prefers-reduced-motion: reduce){.ic{animation:none!important;transition:none!important}}</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="marca" href="index.html"><span class="logo"><svg class="ic anim-brote" aria-hidden="true" focusable="false"><use href="../assets/iconos.svg#ic-sprout"></use></svg></span> Su Finca</a>
+  <nav>
+    <a href="../index.html">← EcoAndes Drone</a>
+    <a href="index.html">Inicio</a>
+    <a href="portal.html">Portal del agricultor</a>
+    <a href="entregas.html">Mis entregas</a>
+  </nav>
+</header>
+
+<main class="contenedor">
+
+  <!-- ============ MIS ENTREGAS (EcoAndes Drone) ============ -->
+  <section class="panel" id="panelEntregas">
+    <h2>Mis entregas de EcoAndes Drone</h2>
+    <p class="seccion-sub">
+      Cuando EcoAndes Drone hace un servicio en tu finca (un informe de lote,
+      un conteo de ganado o un mapa), la entrega queda guardada con el
+      <strong>código de tu finca</strong>. Escríbelo aquí para verla, igual que
+      en la app.
+    </p>
+
+    <form id="formEntregas">
+      <div class="campo">
+        <label for="codigoFinca">Código de tu finca</label>
+        <input type="text" id="codigoFinca" placeholder="Ej. FINCA-0001" autocomplete="off" autocapitalize="characters">
+      </div>
+      <div class="botones">
+        <button type="submit" class="btn btn-primario btn-pequeno" id="btnEntregas">Ver mis entregas</button>
+      </div>
+    </form>
+
+    <p id="estadoEntregas" class="seccion-sub" style="margin-top:1rem"></p>
+    <div id="listaEntregas"></div>
+  </section>
+
+</main>
+
+<footer class="pie">
+  <p><strong>Su Finca</strong> — una aplicación de <strong>EcoAndes Drone</strong> <svg class="ic-bandera" aria-hidden="true" focusable="false"><use href="../assets/iconos.svg#ic-bandera-co"></use></svg></p>
+  <p>Entregas de los servicios de EcoAndes Drone en tu finca</p>
+</footer>
+
+<script src="js/entregas-ecoandes.js"></script>
+</body>
+</html>

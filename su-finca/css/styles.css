@@ -219,6 +219,29 @@ body {
 }
 .pie p { margin: 0.25rem 0; opacity: 0.85; }
 
+/* ---------- Entregas de EcoAndes Drone (mis entregas) ---------- */
+.entrega {
+  border: 1px solid #e2e9e3;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.7rem;
+}
+.entrega strong { color: var(--verde-oscuro); }
+.entrega .tipo {
+  display: inline-block;
+  background: var(--fondo-verde);
+  color: var(--verde-oscuro);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-left: 0.4rem;
+}
+.entrega small { color: var(--texto-suave); display: block; margin-top: 0.2rem; }
+.entrega p { margin: 0.45rem 0 0; }
+.entrega .cifras { margin-top: 0.5rem; display: flex; gap: 0.5rem 1.2rem; flex-wrap: wrap; }
+.entrega .cifras span { background: var(--fondo-verde); border-radius: 8px; padding: 0.25rem 0.7rem; font-size: 0.9rem; }
+
 /* Acceso: campo de clave con ojo para ver lo escrito */
 .clave-ojo { position: relative; }
 .clave-ojo input { width: 100%; padding-right: 3rem; box-sizing: border-box; }
