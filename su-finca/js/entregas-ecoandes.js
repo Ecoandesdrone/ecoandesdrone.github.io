@@ -5,14 +5,16 @@
 // Este proyecto es DISTINTO del de Su Finca (`su-finca-ecoandes`, ver
 // js/firebase-config.js, que NO se toca): las entregas de EcoAndes Pilot
 // (informes de lote, conteos de ganado, mapas) viajan como documentos de
-// la colección `ecoandes_sync` con entidadTipo = "ENTREGA_SUFINCA" y el
-// contenido en el campo `payloadJson` (JSON en texto).
+// la colección `ecoandes_sync` con entidadTipo = "ENTREGA_SUFINCA",
+// accion = "ENTREGAR" y el contenido en el campo `payloadJson` (JSON en
+// texto).
 //
 // La llave pública de abajo es un identificador público de cliente (el
 // mismo que viaja dentro de la app Android de Su Finca); la seguridad la
 // dan las reglas de Firestore. La lectura se hace por REST con sesión
 // anónima, igual que en las apps, y el filtro por código de finca se
-// aplica aquí en el cliente, con coincidencia EXACTA del código.
+// aplica aquí en el cliente, sin distinguir mayúsculas («finca-01» =
+// «FINCA-01», corrección H7 del bloque H1–H10, 2026-11-07).
 
 const ecoandesPilotConfig = {
   apiKey: "AIzaSyAw2JWwaZnCdzLZdISXmGxsqAUPSrOFpJk",
@@ -47,9 +49,9 @@ const ETIQUETAS_DATOS = {
   lote: "Lote"
 };
 
-// Tope del escaneo de la colección por consulta (igual que en las apps:
-// se pagina hasta agotar la colección o llegar a este tope).
-const MAX_DOCUMENTOS_ESCANEO = 1000;
+// Tamaño de página del escaneo de la colección (igual que en las apps:
+// se pagina hasta agotar la colección; sin tope silencioso desde la
+// corrección H6 del bloque H1–H10, 2026-11-07).
 const TAMANO_PAGINA = 200;
 
 /* ---------- Sesión anónima contra ecoandes-pilot (REST) ---------- */
@@ -98,15 +100,16 @@ function desempaquetarCampos(fields) {
   return obj;
 }
 
-// Lee la colección ecoandes_sync paginando (pageSize 200) hasta agotarla
-// o llegar al tope documentado. Devuelve los documentos ya desempaquetados.
+// Lee la colección ecoandes_sync paginando (pageSize 200) hasta
+// agotarla: la lectura termina cuando Firestore ya no devuelve
+// nextPageToken. Devuelve los documentos ya desempaquetados.
 async function leerDocumentosSync(token) {
   const base =
     "https://firestore.googleapis.com/v1/projects/" + ecoandesPilotConfig.projectId +
     "/databases/(default)/documents/" + ecoandesPilotConfig.coleccionSync;
   const documentos = [];
   let pageToken = null;
-  while (documentos.length < MAX_DOCUMENTOS_ESCANEO) {
+  while (true) {
     let url = base + "?pageSize=" + TAMANO_PAGINA;
     if (pageToken) url += "&pageToken=" + encodeURIComponent(pageToken);
     const resp = await fetch(url, {
@@ -136,6 +139,11 @@ async function leerDocumentosSync(token) {
 function interpretarEntrega(doc) {
   const campos = doc.campos || {};
   if (campos.entidadTipo !== ENTIDAD_TIPO_ENTREGA) return null;
+  // Contrato v1 completo (corrección H3, 2026-11-07): el campo
+  // `accion` del documento se lee y se respeta — solo ENTREGAR es una
+  // entrega mostrable; otra acción (p. ej. una revocación) no se
+  // muestra. Sin campo `accion` (documentos viejos) se acepta.
+  if (campos.accion != null && campos.accion !== "ENTREGAR") return null;
   if (typeof campos.payloadJson !== "string" || !campos.payloadJson.trim()) return null;
 
   let payload;
@@ -199,6 +207,14 @@ function formatearValor(valor) {
 }
 
 /* ---------- Vista ---------- */
+
+// Forma comparable de un código de finca (corrección H7, 2026-11-07):
+// sin espacios sobrantes y en mayúsculas, en los dos lados de la
+// comparación — igual que en la app Android.
+function normalizarCodigo(s) {
+  return String(s ?? "").trim().toUpperCase();
+}
+
 function pintarEntregas(entregas) {
   const lista = $("listaEntregas");
   if (!entregas.length) {
@@ -247,7 +263,7 @@ async function buscarEntregas() {
     const documentos = await leerDocumentosSync(token);
     const entregas = documentos
       .map(interpretarEntrega)
-      .filter((e) => e !== null && e.fincaCodigo === codigo)
+      .filter((e) => e !== null && normalizarCodigo(e.fincaCodigo) === normalizarCodigo(codigo))
       .sort((a, b) => (b.creadoMs || 0) - (a.creadoMs || 0));
     estado.textContent = "";
     pintarEntregas(entregas);

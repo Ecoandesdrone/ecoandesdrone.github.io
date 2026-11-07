@@ -331,6 +331,7 @@ function iniciarPortal(auth, db) {
       lotesCache = lotes;
       pintarLotes(lotes);
       suscribirSensores(lotes);
+      poblarSelectLotesLectura(lotes);
     }, (e) => {
       $("listaLotes").innerHTML = `<p class="seccion-sub" style="color:var(--rojo)">Error cargando lotes: ${esc(e.message)}</p>`;
     });
@@ -402,7 +403,7 @@ function iniciarPortal(auth, db) {
       const lec = ultimas.get(l.id);
       if (!lec) {
         return `<div class="lote"><div class="info"><strong>${esc(l.nombre)}</strong><br>
-          <small class="seccion-sub">Sin sensores todavía. Cuando los instales en este lote, aquí verás la temperatura y la humedad en tiempo real.</small></div></div>`;
+          <small class="seccion-sub">Sin lecturas todavía en este lote. Por ahora las lecturas se registran a mano con el formulario de abajo: no hay sensores automáticos conectados.</small></div></div>`;
       }
       const alertas = alertasSensor(lec).map((m) =>
         `<div class="alerta alerta-advertencia" style="margin:0.4rem 0">${lec.simulado ? "Datos de prueba: " : ""}${esc(m)}</div>`).join("");
@@ -420,35 +421,60 @@ function iniciarPortal(auth, db) {
       `<p class="seccion-sub">Sin lotes todavía.</p>`;
   }
 
-  /* ----- Datos de prueba: lecturas de ejemplo en el primer lote ----- */
-  $("btnDatosPrueba").onclick = async () => {
-    if (!lotesCache.length) {
-      $("msgDatosPrueba").innerHTML = `<div class="alerta alerta-advertencia">\u26a0\ufe0f Primero crea un lote arriba.</div>`;
+  /* ----- Sensores: registro MANUAL de lecturas (corrección H5,
+     bloque H1–H10, 2026-11-07) -----
+     Las lecturas SOLO entran a mano desde este formulario: no hay
+     ningún sensor automático conectado y ya no existe el generador de
+     «datos de prueba» (eran lecturas inventadas con Math.random: se
+     retiró). Lo que el usuario escribe aquí es exactamente lo que la
+     app muestra; si un lote no tiene lecturas, el vacío se declara en
+     la tarjeta del lote y en la app («Sin datos de sensores todavía»).
+     Las lecturas viejas marcadas `simulado` que aún existan en la nube
+     se siguen mostrando con su chip «SIMULADA»: etiquetadas, jamás
+     disfrazadas de reales. */
+  function poblarSelectLotesLectura(lotes) {
+    const sel = $("lecLote");
+    if (!sel) return;
+    const previo = sel.value;
+    sel.innerHTML = lotes.map((l) =>
+      `<option value="${esc(l.id)}">${esc(l.nombre)}</option>`).join("");
+    if (previo && lotes.some((l) => l.id === previo)) sel.value = previo;
+  }
+
+  $("btnGuardarLectura").onclick = async () => {
+    const msg = $("msgLectura");
+    const loteId = $("lecLote").value;
+    if (!loteId) {
+      msg.innerHTML = `<div class="alerta alerta-advertencia">\u26a0\ufe0f Primero crea un lote arriba.</div>`;
       return;
     }
-    const lote = lotesCache[0];
-    const ahora = Date.now();
-    const ejemplos = [];
-    for (let i = 0; i < 8; i++) {
-      const ts = ahora - i * 15 * 60000; // cada 15 min hacia atrás
-      ejemplos.push({
-        loteId: lote.id,
-        ts,
-        tempAmb: 22 + Math.sin(i / 2) * 4 + (Math.random() - 0.5),
-        humAmb: 65 + Math.sin(i / 3) * 10 + (Math.random() - 0.5) * 4,
-        humSuelo: 45 - i * 2 + (Math.random() - 0.5) * 3,
-        bateria: 87 - i,
-        dispositivoId: "nodo-01",
-        simulado: true
-      });
+    const numero = (id) => {
+      const v = $(id).value.trim();
+      return v === "" ? null : Number(v.replace(",", "."));
+    };
+    const tempAmb = numero("lecTemp");
+    const humAmb = numero("lecHumAmb");
+    const humSuelo = numero("lecHumSuelo");
+    if ([tempAmb, humAmb, humSuelo].some((v) => v !== null && !Number.isFinite(v))) {
+      msg.innerHTML = `<div class="alerta alerta-error">\u26a0\ufe0f Revisa los números escritos: usa punto o coma para los decimales.</div>`;
+      return;
     }
+    if (tempAmb === null && humAmb === null && humSuelo === null) {
+      msg.innerHTML = `<div class="alerta alerta-advertencia">\u26a0\ufe0f Escribe al menos una medición.</div>`;
+      return;
+    }
+    const lectura = { loteId, ts: Date.now() };
+    if (tempAmb !== null) lectura.tempAmb = tempAmb;
+    if (humAmb !== null) lectura.humAmb = humAmb;
+    if (humSuelo !== null) lectura.humSuelo = humSuelo;
     try {
-      for (const e of ejemplos) {
-        await addDoc(collection(db, "lotes", lote.id, "lecturas"), e);
-      }
-      $("msgDatosPrueba").innerHTML = `<div class="alerta alerta-ok">\u2705 Listo: 8 lecturas de ejemplo en "${esc(lote.nombre)}". Ya las ves arriba 👆</div>`;
+      await addDoc(collection(db, "lotes", loteId, "lecturas"), lectura);
+      $("lecTemp").value = "";
+      $("lecHumAmb").value = "";
+      $("lecHumSuelo").value = "";
+      msg.innerHTML = `<div class="alerta alerta-ok">\u2705 Lectura guardada. Ya la ves arriba y también en la app.</div>`;
     } catch (err) {
-      $("msgDatosPrueba").innerHTML = `<div class="alerta alerta-error">\u26a0\ufe0f No se pudo crear: ${esc(err.message)}</div>`;
+      msg.innerHTML = `<div class="alerta alerta-error">\u26a0\ufe0f No se pudo guardar: ${esc(err.message)}</div>`;
     }
   };
 
