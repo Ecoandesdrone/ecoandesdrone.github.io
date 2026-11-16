@@ -50,6 +50,16 @@ const ETIQUETAS_DATOS = {
   lote: "Lote"
 };
 
+const CLAVES_TECNICAS_MAPA = new Set([
+  "ortomosaicoTilesUrl",
+  "terrenoDemTilesUrl",
+  "modelo3dGlbUrl",
+  "tileset3dUrl",
+  "centroLat",
+  "centroLon",
+  "fechaMapa"
+]);
+
 // Tamaño de página del escaneo de la colección (igual que en las apps:
 // se pagina hasta agotar la colección; sin tope silencioso desde la
 // corrección H6 del bloque H1–H10, 2026-11-07).
@@ -162,10 +172,34 @@ function interpretarEntrega(doc) {
     if (!Number.isNaN(t)) creadoMs = t;
   }
 
-  // Cifras de payload.datos (solo valores simples; nada se inventa).
+  // Cifras de payload.datos y metadatos del mapa 3D cuando tipo === "MAPA".
   const cifras = [];
+  let mapa3d = null;
   if (payload.datos && typeof payload.datos === "object" && !Array.isArray(payload.datos)) {
+    if (
+      tipo === "MAPA" &&
+      typeof payload.datos.ortomosaicoTilesUrl === "string" &&
+      payload.datos.ortomosaicoTilesUrl.trim()
+    ) {
+      const lat = Number(payload.datos.centroLat);
+      const lon = Number(payload.datos.centroLon);
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        mapa3d = {
+          lote: typeof payload.datos.lote === "string" ? payload.datos.lote : "",
+          centroLat: lat,
+          centroLon: lon,
+          ortomosaicoTilesUrl: payload.datos.ortomosaicoTilesUrl.trim(),
+          terrenoDemTilesUrl: typeof payload.datos.terrenoDemTilesUrl === "string"
+            ? payload.datos.terrenoDemTilesUrl.trim()
+            : "",
+          modelo3dGlbUrl: typeof payload.datos.modelo3dGlbUrl === "string"
+            ? payload.datos.modelo3dGlbUrl.trim()
+            : ""
+        };
+      }
+    }
     for (const clave of Object.keys(payload.datos)) {
+      if (tipo === "MAPA" && CLAVES_TECNICAS_MAPA.has(clave)) continue;
       const valor = payload.datos[clave];
       if (typeof valor === "number" || typeof valor === "string" || typeof valor === "boolean") {
         cifras.push({ etiqueta: ETIQUETAS_DATOS[clave] || clave, valor });
@@ -173,7 +207,7 @@ function interpretarEntrega(doc) {
     }
   }
 
-  return { entidadId, fincaCodigo, tipo, titulo, resumen, creadoMs, cifras };
+  return { entidadId, fincaCodigo, tipo, titulo, resumen, creadoMs, cifras, mapa3d };
 }
 
 function fechaEnPalabras(creadoMs) {
@@ -193,6 +227,106 @@ function formatearValor(valor) {
   return String(valor);
 }
 
+/* ---------- Visor 3D interactivo (MapLibre GL JS + model-viewer) ---------- */
+
+const mapasActivos = [];
+
+function limpiarMapasActivos() {
+  while (mapasActivos.length) {
+    const m = mapasActivos.pop();
+    try { m.remove(); } catch (e) {}
+  }
+}
+
+function montarVisor3dLote(idx, m) {
+  const wrap = $("mapa3d-wrap-" + idx);
+  const contMapa = $("mapa3d-visor-" + idx);
+  if (!wrap || !contMapa) return;
+
+  let mapa = null;
+  if (typeof maplibregl !== "undefined") {
+    const sources = {
+      osm: {
+        type: "raster",
+        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+        tileSize: 256,
+        attribution: "© OpenStreetMap"
+      },
+      ortomosaico: {
+        type: "raster",
+        tiles: [m.ortomosaicoTilesUrl],
+        tileSize: 256,
+        maxzoom: 21
+      }
+    };
+    if (m.terrenoDemTilesUrl) {
+      sources.relieve3d = {
+        type: "raster-dem",
+        tiles: [m.terrenoDemTilesUrl],
+        tileSize: 256,
+        encoding: "terrarium"
+      };
+    }
+    const style = {
+      version: 8,
+      sources,
+      layers: [
+        { id: "osm", type: "raster", source: "osm" },
+        { id: "ortomosaico", type: "raster", source: "ortomosaico" }
+      ]
+    };
+    if (m.terrenoDemTilesUrl) {
+      style.terrain = { source: "relieve3d", exaggeration: 1.35 };
+    }
+    mapa = new maplibregl.Map({
+      container: contMapa,
+      center: [m.centroLon, m.centroLat],
+      zoom: 17,
+      pitch: 60,
+      bearing: -20,
+      maxPitch: 75,
+      touchPitch: true,
+      dragRotate: true,
+      touchZoomRotate: true,
+      style
+    });
+    mapa.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+    mapasActivos.push(mapa);
+  } else {
+    contMapa.innerHTML =
+      '<p style="color:#fff;padding:1rem;margin:0">No se pudo cargar el visor 3D (revisa tu conexión).</p>';
+  }
+
+  const btnMapa = $("btn-mapa3d-" + idx);
+  const btnMaqueta = $("btn-maqueta3d-" + idx);
+  const maqueta = $("mapa3d-maqueta-" + idx);
+  const btnFull = $("btn-full3d-" + idx);
+
+  if (btnMapa && btnMaqueta && maqueta) {
+    btnMapa.addEventListener("click", () => {
+      btnMapa.classList.add("activo");
+      btnMaqueta.classList.remove("activo");
+      contMapa.style.display = "block";
+      maqueta.style.display = "none";
+      if (mapa) setTimeout(() => { try { mapa.resize(); } catch (e) {} }, 40);
+    });
+    btnMaqueta.addEventListener("click", () => {
+      btnMaqueta.classList.add("activo");
+      btnMapa.classList.remove("activo");
+      contMapa.style.display = "none";
+      maqueta.style.display = "block";
+    });
+  }
+
+  if (btnFull) {
+    btnFull.addEventListener("click", () => {
+      const expandido = wrap.classList.toggle("mapa3d-pantalla-completa");
+      btnFull.textContent = expandido ? "Salir de pantalla completa" : "Pantalla completa";
+      if (mapa) setTimeout(() => { try { mapa.resize(); } catch (e) {} }, 60);
+    });
+  }
+}
+
 /* ---------- Vista ---------- */
 
 // Forma comparable de un código de finca (corrección H7, 2026-11-07):
@@ -203,6 +337,7 @@ function normalizarCodigo(s) {
 }
 
 function pintarEntregas(entregas) {
+  limpiarMapasActivos();
   const lista = $("listaEntregas");
   if (!entregas.length) {
     lista.innerHTML =
@@ -213,12 +348,28 @@ function pintarEntregas(entregas) {
     entregas.length === 1
       ? "Tienes 1 entrega de EcoAndes Drone:"
       : "Tienes " + entregas.length + " entregas de EcoAndes Drone:";
-  lista.innerHTML = entregas.map((e) => {
+  lista.innerHTML = entregas.map((e, idx) => {
     const fecha = fechaEnPalabras(e.creadoMs);
     const cifras = e.cifras.length
       ? '<div class="cifras">' + e.cifras.map((c) =>
           "<span><strong>" + esc(c.etiqueta) + ":</strong> " + esc(formatearValor(c.valor)) + "</span>"
         ).join("") + "</div>"
+      : "";
+    const bloqueMapa3d = e.mapa3d
+      ? '<div class="mapa3d-wrap" id="mapa3d-wrap-' + idx + '">' +
+          '<div class="mapa3d-barra">' +
+            '<button type="button" class="mapa3d-btn activo" id="btn-mapa3d-' + idx + '">Mapa 3D</button>' +
+            (e.mapa3d.modelo3dGlbUrl
+              ? '<button type="button" class="mapa3d-btn" id="btn-maqueta3d-' + idx + '">Maqueta 3D</button>'
+              : "") +
+            '<button type="button" class="mapa3d-btn mapa3d-btn-full" id="btn-full3d-' + idx + '">Pantalla completa</button>' +
+          "</div>" +
+          '<div class="mapa3d-visor" id="mapa3d-visor-' + idx + '"></div>' +
+          (e.mapa3d.modelo3dGlbUrl
+            ? '<model-viewer id="mapa3d-maqueta-' + idx + '" class="mapa3d-maqueta" src="' + esc(e.mapa3d.modelo3dGlbUrl) + '" camera-controls touch-action="pan-y" shadow-intensity="1" alt="Maqueta 3D del lote"></model-viewer>'
+            : "") +
+          '<p class="mapa3d-ayuda">Pellizca para ampliar o reducir, arrastra para mover y gira con dos dedos para ver el relieve.</p>' +
+        "</div>"
       : "";
     return '<div class="entrega">' +
       "<strong>" + esc(e.titulo) + "</strong>" +
@@ -226,8 +377,13 @@ function pintarEntregas(entregas) {
       (fecha ? "<small>" + esc(fecha) + "</small>" : "") +
       "<p>" + esc(e.resumen) + "</p>" +
       cifras +
+      bloqueMapa3d +
       "</div>";
   }).join("");
+
+  entregas.forEach((e, idx) => {
+    if (e.mapa3d) montarVisor3dLote(idx, e.mapa3d);
+  });
 }
 
 async function buscarEntregas() {
