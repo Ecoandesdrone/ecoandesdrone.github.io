@@ -4,22 +4,23 @@
 //
 // Este proyecto es DISTINTO del de Su Finca (`su-finca-ecoandes`, ver
 // js/firebase-config.js, que NO se toca): las entregas de EcoAndes Pilot
-// (informes de lote, conteos de ganado, mapas) viajan como documentos de
-// la colección `ecoandes_sync` con entidadTipo = "ENTREGA_SUFINCA",
-// accion = "ENTREGAR" y el contenido en el campo `payloadJson` (JSON en
-// texto).
+// (informes de lote, conteos de ganado, mapas) se publican como copia
+// sanitizada en la colección `entregas_publicas`, con entidadTipo =
+// "ENTREGA_SUFINCA", accion = "ENTREGAR" y el contenido en el campo
+// `payloadJson` (JSON en texto). La copia la escribe la propia app
+// Pilot (SuFincaPublisher, desde la v1.9.33) con su cuenta de servicio.
 //
-// La llave pública de abajo es un identificador público de cliente (el
-// mismo que viaja dentro de la app Android de Su Finca); la seguridad la
-// dan las reglas de Firestore. La lectura se hace por REST con sesión
-// anónima, igual que en las apps, y el filtro por código de finca se
-// aplica aquí en el cliente, sin distinguir mayúsculas («finca-01» =
-// «FINCA-01», corrección H7 del bloque H1–H10, 2026-11-07).
+// La colección `entregas_publicas` es de LECTURA PÚBLICA por reglas
+// (Fase 1, opción B, Spark $0): esta página ya NO abre sesión anónima
+// ni usa token. La lectura se hace por REST sin autenticación, y el
+// filtro por código de finca se aplica aquí en el cliente, sin
+// distinguir mayúsculas («finca-01» = «FINCA-01», corrección H7 del
+// bloque H1–H10, 2026-11-07). Una entrega republicada deja dos copias
+// con el mismo entidadId: se deduplica quedando la más reciente.
 
 const ecoandesPilotConfig = {
-  apiKey: "AIzaSyAw2JWwaZnCdzLZdISXmGxsqAUPSrOFpJk",
   projectId: "ecoandes-pilot",
-  coleccionSync: "ecoandes_sync"
+  coleccionPublica: "entregas_publicas"
 };
 
 /* ---------- Utilidades ---------- */
@@ -54,28 +55,7 @@ const ETIQUETAS_DATOS = {
 // corrección H6 del bloque H1–H10, 2026-11-07).
 const TAMANO_PAGINA = 200;
 
-/* ---------- Sesión anónima contra ecoandes-pilot (REST) ---------- */
-let idTokenPilot = null;
-
-async function obtenerTokenPilot() {
-  if (idTokenPilot) return idTokenPilot;
-  const resp = await fetch(
-    "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" +
-      encodeURIComponent(ecoandesPilotConfig.apiKey),
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ returnSecureToken: true })
-    }
-  );
-  if (!resp.ok) throw new Error("sesion-" + resp.status);
-  const datos = await resp.json();
-  if (!datos.idToken) throw new Error("sesion-sin-token");
-  idTokenPilot = datos.idToken;
-  return idTokenPilot;
-}
-
-/* ---------- Lectura de documentos Firestore por REST ---------- */
+/* ---------- Lectura de documentos Firestore por REST (sin sesión) ---------- */
 
 // Los valores de Firestore por REST vienen tipados
 // ({stringValue: "..."}, {integerValue: "42"}, {mapValue: {fields: {...}}}…).
@@ -100,26 +80,26 @@ function desempaquetarCampos(fields) {
   return obj;
 }
 
-// Lee la colección ecoandes_sync paginando (pageSize 200) hasta
+// Lee la colección entregas_publicas paginando (pageSize 200) hasta
 // agotarla: la lectura termina cuando Firestore ya no devuelve
 // nextPageToken. Devuelve los documentos ya desempaquetados.
-async function leerDocumentosSync(token) {
+// Sin autenticación: la colección es de lectura pública por reglas.
+async function leerDocumentosPublicos() {
   const base =
     "https://firestore.googleapis.com/v1/projects/" + ecoandesPilotConfig.projectId +
-    "/databases/(default)/documents/" + ecoandesPilotConfig.coleccionSync;
+    "/databases/(default)/documents/" + ecoandesPilotConfig.coleccionPublica;
   const documentos = [];
   let pageToken = null;
   while (true) {
     let url = base + "?pageSize=" + TAMANO_PAGINA;
     if (pageToken) url += "&pageToken=" + encodeURIComponent(pageToken);
-    const resp = await fetch(url, {
-      headers: { Authorization: "Bearer " + token }
-    });
+    const resp = await fetch(url);
     if (!resp.ok) throw new Error("lectura-" + resp.status);
     const datos = await resp.json();
     const pagina = datos.documents || [];
     for (const doc of pagina) {
       documentos.push({
+        id: (doc.name || "").split("/").pop(),
         campos: desempaquetarCampos(doc.fields || {}),
         creadoEnDocumento: doc.createTime || null
       });
@@ -132,7 +112,7 @@ async function leerDocumentosSync(token) {
 
 /* ---------- Interpretación de una entrega ---------- */
 
-// Reconstruye una entrega desde un documento de ecoandes_sync.
+// Reconstruye una entrega desde un documento de entregas_publicas.
 // Devuelve null si el documento no es una entrega válida del contrato
 // (otro entidadTipo, payload ilegible o sin los campos obligatorios):
 // esos documentos NO se muestran al cliente. Igual que en las apps.
@@ -153,6 +133,13 @@ function interpretarEntrega(doc) {
     return null;
   }
   if (!payload || typeof payload !== "object") return null;
+
+  // Identidad de la entrega para deduplicar: el espejo escribe una
+  // copia nueva por cada publicación de la misma entrega; el campo
+  // entidadId es el mismo en todas las copias.
+  const entidadId = typeof campos.entidadId === "string" && campos.entidadId.trim()
+    ? campos.entidadId.trim()
+    : (doc.id || "");
 
   const fincaCodigo = typeof payload.fincaCodigo === "string" ? payload.fincaCodigo : "";
   const tipo = typeof payload.tipo === "string" ? payload.tipo : "";
@@ -186,7 +173,7 @@ function interpretarEntrega(doc) {
     }
   }
 
-  return { fincaCodigo, tipo, titulo, resumen, creadoMs, cifras };
+  return { entidadId, fincaCodigo, tipo, titulo, resumen, creadoMs, cifras };
 }
 
 function fechaEnPalabras(creadoMs) {
@@ -259,11 +246,18 @@ async function buscarEntregas() {
   estado.textContent = "Buscando tus entregas…";
   lista.innerHTML = "";
   try {
-    const token = await obtenerTokenPilot();
-    const documentos = await leerDocumentosSync(token);
-    const entregas = documentos
+    const documentos = await leerDocumentosPublicos();
+    const vistas = documentos
       .map(interpretarEntrega)
-      .filter((e) => e !== null && normalizarCodigo(e.fincaCodigo) === normalizarCodigo(codigo))
+      .filter((e) => e !== null && normalizarCodigo(e.fincaCodigo) === normalizarCodigo(codigo));
+    // Deduplica por entidadId: una entrega republicada deja varias
+    // copias en entregas_publicas; queda solo la más reciente.
+    const porId = new Map();
+    for (const e of vistas) {
+      const actual = porId.get(e.entidadId);
+      if (!actual || (e.creadoMs || 0) > (actual.creadoMs || 0)) porId.set(e.entidadId, e);
+    }
+    const entregas = [...porId.values()]
       .sort((a, b) => (b.creadoMs || 0) - (a.creadoMs || 0));
     estado.textContent = "";
     pintarEntregas(entregas);
