@@ -33,6 +33,13 @@ function esc(s) {
   }[c]));
 }
 
+// Acepta solo URLs https:// (evita esquemas no seguros en visor 3D / model-viewer).
+function urlHttpsSegura(u) {
+  if (typeof u !== "string") return "";
+  const limpia = u.trim();
+  return /^https:\/\//i.test(limpia) ? limpia : "";
+}
+
 /* ---------- Contrato de entregas (espejo de las apps) ---------- */
 const ENTIDAD_TIPO_ENTREGA = "ENTREGA_SUFINCA";
 
@@ -147,9 +154,11 @@ function interpretarEntrega(doc) {
   // Identidad de la entrega para deduplicar: el espejo escribe una
   // copia nueva por cada publicación de la misma entrega; el campo
   // entidadId es el mismo en todas las copias.
-  const entidadId = typeof campos.entidadId === "string" && campos.entidadId.trim()
-    ? campos.entidadId.trim()
-    : (doc.id || "");
+  const entidadId =
+    (typeof campos.entidadId === "string" && campos.entidadId.trim()) ||
+    (typeof payload.entregaId === "string" && payload.entregaId.trim()) ||
+    (typeof doc.id === "string" && doc.id.trim()) ||
+    "";
 
   const fincaCodigo = typeof payload.fincaCodigo === "string" ? payload.fincaCodigo : "";
   const tipo = typeof payload.tipo === "string" ? payload.tipo : "";
@@ -176,11 +185,8 @@ function interpretarEntrega(doc) {
   const cifras = [];
   let mapa3d = null;
   if (payload.datos && typeof payload.datos === "object" && !Array.isArray(payload.datos)) {
-    if (
-      tipo === "MAPA" &&
-      typeof payload.datos.ortomosaicoTilesUrl === "string" &&
-      payload.datos.ortomosaicoTilesUrl.trim()
-    ) {
+    const ortoUrl = tipo === "MAPA" ? urlHttpsSegura(payload.datos.ortomosaicoTilesUrl) : "";
+    if (ortoUrl) {
       const lat = Number(payload.datos.centroLat);
       const lon = Number(payload.datos.centroLon);
       if (Number.isFinite(lat) && Number.isFinite(lon)) {
@@ -188,13 +194,9 @@ function interpretarEntrega(doc) {
           lote: typeof payload.datos.lote === "string" ? payload.datos.lote : "",
           centroLat: lat,
           centroLon: lon,
-          ortomosaicoTilesUrl: payload.datos.ortomosaicoTilesUrl.trim(),
-          terrenoDemTilesUrl: typeof payload.datos.terrenoDemTilesUrl === "string"
-            ? payload.datos.terrenoDemTilesUrl.trim()
-            : "",
-          modelo3dGlbUrl: typeof payload.datos.modelo3dGlbUrl === "string"
-            ? payload.datos.modelo3dGlbUrl.trim()
-            : ""
+          ortomosaicoTilesUrl: ortoUrl,
+          terrenoDemTilesUrl: urlHttpsSegura(payload.datos.terrenoDemTilesUrl),
+          modelo3dGlbUrl: urlHttpsSegura(payload.datos.modelo3dGlbUrl)
         };
       }
     }
@@ -386,6 +388,30 @@ function pintarEntregas(entregas) {
   });
 }
 
+// Deduplica por entidadId.trim() conservando la versión con mayor creadoMs
+// y ordenando descendente. Paridad exacta con EntregaEcoAndes.deduplicarPorEntregaId:
+// las entregas sin ID (vacío/espacios) nunca se colapsan entre sí.
+function timestampSeguro(e) {
+  return typeof e?.creadoMs === "number" && Number.isFinite(e.creadoMs) ? e.creadoMs : 0;
+}
+
+function deduplicarEntregas(lista) {
+  const porId = new Map();
+  const sinId = [];
+  for (const e of lista) {
+    const clave = String(e.entidadId ?? "").trim();
+    if (!clave) {
+      sinId.push(e);
+      continue;
+    }
+    const actual = porId.get(clave);
+    if (!actual || timestampSeguro(e) > timestampSeguro(actual)) {
+      porId.set(clave, e);
+    }
+  }
+  return [...porId.values(), ...sinId].sort((a, b) => timestampSeguro(b) - timestampSeguro(a));
+}
+
 async function buscarEntregas() {
   const codigo = $("codigoFinca").value.trim();
   const estado = $("estadoEntregas");
@@ -406,15 +432,7 @@ async function buscarEntregas() {
     const vistas = documentos
       .map(interpretarEntrega)
       .filter((e) => e !== null && normalizarCodigo(e.fincaCodigo) === normalizarCodigo(codigo));
-    // Deduplica por entidadId: una entrega republicada deja varias
-    // copias en entregas_publicas; queda solo la más reciente.
-    const porId = new Map();
-    for (const e of vistas) {
-      const actual = porId.get(e.entidadId);
-      if (!actual || (e.creadoMs || 0) > (actual.creadoMs || 0)) porId.set(e.entidadId, e);
-    }
-    const entregas = [...porId.values()]
-      .sort((a, b) => (b.creadoMs || 0) - (a.creadoMs || 0));
+    const entregas = deduplicarEntregas(vistas);
     estado.textContent = "";
     pintarEntregas(entregas);
   } catch (e) {
